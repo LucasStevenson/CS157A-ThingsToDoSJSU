@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dashboard</title>
+    <style>
+        /* dashboard.ejs styles */
+        body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+        }
+
+        .container {
+        max-width: 400px;
+        margin: 0 auto;
+        }
+
+        h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        }
+
+        .user-card {
+        background-color: #ffffff;
+        padding: 20px;
+        border: 1px solid #cccccc;
+        border-radius: 5px;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-card h2 {
+        color: #333;
+        margin-bottom: 10px;
+        }
+
+        .logout-btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        background-color: #f44336;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to the Dashboard, <%= user.firstName %> <%= user.lastName %>!</h1>
+    <p>Email: <%= user.email %></p>
+    <form action="/logout" method="GET">
+      <button type="submit">Logout</button>
+    </form>
+  </body>
+</html>

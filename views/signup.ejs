@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Signup</title>
+    <style>
+                /* signup.ejs styles */
+        body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        padding: 20px;
+        }
+
+        .container {
+        max-width: 400px;
+        margin: 0 auto;
+        }
+
+        h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+          }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #cccccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        }
+
+        p {
+        text-align: center;
+        }
+
+        a {
+        color: #4caf50;
+        text-decoration: none;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Signup</h1>
+    <form action="/signup" method="POST">
+      <input type="text" name="firstName" placeholder="First Name" required />
+      <br />
+      <input type="text" name="lastName" placeholder="Last Name" required />
+      <br />
+      <input type="email" name="email" placeholder="Email" required />
+      <br />
+      <input type="password" name="password" placeholder="Password" required />
+      <br />
+      <button type="submit">Signup</button>
+    </form>
+    <p>Already have an account? <a href="/login">Login</a></p>
+  </body>
+</html>
