@@ -5,6 +5,19 @@ function createDbConnection(dbPath) {
         if (err) return console.error(err);
         createTables(db);
     });
+    // create a .query() method that allows us to run commands using async/await syntax
+    db.query = function(sql, params) {
+        let that = this;
+        return new Promise((resolve, reject) => {
+            that.all(sql, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ rows: rows });
+                }
+            });
+        });
+    }
     console.log(`Successfully connected to database '${dbPath}'`);
     return db;
 }
