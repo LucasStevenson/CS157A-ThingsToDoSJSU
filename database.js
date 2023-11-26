@@ -13,6 +13,7 @@ function createTables(db) {
     db.exec(`
         CREATE TABLE IF NOT EXISTS Place_listing (
             place_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE NOT NULL,
+            name VARCHAR(50) NOT NULL,
             business_type VARCHAR(50) NOT NULL,
             recommendation_rating REAL NOT NULL,
             cash_rating REAL NOT NULL,
