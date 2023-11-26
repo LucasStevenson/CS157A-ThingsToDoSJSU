@@ -5,28 +5,41 @@ function createDbConnection(dbPath) {
         if (err) return console.error(err);
         createTables(db);
     });
+    // create a .query() method that allows us to run commands using async/await syntax
+    db.query = function(sql, params) {
+        let that = this;
+        return new Promise((resolve, reject) => {
+            that.all(sql, params, (err, rows) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ rows: rows });
+                }
+            });
+        });
+    }
     console.log(`Successfully connected to database '${dbPath}'`);
     return db;
 }
 
 function createTables(db) {
     db.exec(`
-
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            firstName TEXT NOT NULL,
-            lastName TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL
-        );
-        
         CREATE TABLE IF NOT EXISTS Place_listing (
             place_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE NOT NULL,
-            address VARCHAR(50) NOT NULL,
+            name VARCHAR(50) NOT NULL,
             business_type VARCHAR(50) NOT NULL,
             recommendation_rating REAL NOT NULL,
             cash_rating REAL NOT NULL,
             phone_number VARCHAR(20) NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS Place_address (
+            address_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE NOT NULL,
+            place_id INT NOT NULL,
+            street_address VARCHAR(50) NOT NULL,
+            latitude TEXT NOT NULL,
+            longitude TEXT NOT NULL,
+            FOREIGN KEY (place_id) REFERENCES Place_listing(place_id)
         );
 
         CREATE TABLE IF NOT EXISTS Place_comments (

@@ -1,5 +1,4 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const session = require('express-session');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
@@ -33,41 +32,20 @@ app.get('/signup', (req, res) => {
   res.render('signup');
 });
 
-app.post(
-  '/signup',
-  [
-    body('firstName').notEmpty().trim().escape(),
-    body('lastName').notEmpty().trim().escape(),
-    body('email').isEmail().normalizeEmail(),
-    body('password').isLength({ min: 6 }),
-  ],
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.render('error', {errors: errors.array() });
-    }
-
-    const { firstName, lastName, email, password } = req.body;
-
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
-      if (err) {
-        return res.render('error', { message: 'An error occurred' });
-      }
-
-      db.run(
-        'INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)',
-        [firstName, lastName, email, hashedPassword],
-        (err) => {
-          if (err) {
-            return res.render('error', { message: 'An error occurred' });
-          }
-
-          res.redirect('/login');
+app.post('/signup', [body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 6 })], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.render('error', {errors: errors.array() });
         }
-      );
-    });
-  }
-);
+        const { email, password } = req.body;
+        let hashedPassword = await bcrypt.hash(password, 10);
+        await db.query('INSERT INTO UserAccounts (email, password) VALUES (?, ?)', [email, hashedPassword]);
+        res.redirect('/login');
+    } catch (err) {
+        return res.render('error', { message: 'An error occurred' });
+    }
+});
 
 app.get('/login', (req, res) => {
     res.render('login', { message: '' });
