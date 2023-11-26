@@ -13,11 +13,19 @@ function createTables(db) {
     db.exec(`
         CREATE TABLE IF NOT EXISTS Place_listing (
             place_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE NOT NULL,
-            address VARCHAR(50) NOT NULL,
             business_type VARCHAR(50) NOT NULL,
             recommendation_rating REAL NOT NULL,
             cash_rating REAL NOT NULL,
             phone_number VARCHAR(20) NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS Place_address (
+            address_id INT AUTO_INCREMENT PRIMARY KEY UNIQUE NOT NULL,
+            place_id INT NOT NULL,
+            street_address VARCHAR(50) NOT NULL,
+            latitude TEXT NOT NULL,
+            longitude TEXT NOT NULL,
+            FOREIGN KEY (place_id) REFERENCES Place_listing(place_id)
         );
 
         CREATE TABLE IF NOT EXISTS Place_comments (
