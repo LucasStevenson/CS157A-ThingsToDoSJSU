@@ -66,31 +66,31 @@ app.get('/logout', async (req, res) => {
 app.get("/data/place_listings", async (req, res) => {
     // returns all the place_listings as an array of json objects
     let data = await db.query("SELECT * FROM Place_listing");
-    res.json(data["rows"]);
+    return res.json(data["rows"]);
 });
 
 app.get("/data/place_business_hours", async (req, res) => {
     // returns all the place_businessHours as an array of json objects
     let data = await db.query("SELECT * FROM Place_businessHours");
-    res.json(data["rows"]);
+    return res.json(data["rows"]);
 });
 
 app.get("/data/place_address", async (req, res) => {
     // returns all the place_addresses as an array of json objects
     let data = await db.query("SELECT * FROM Place_address");
-    res.json(data["rows"]);
+    return res.json(data["rows"]);
 });
 
 app.get("/data/place_comments", async (req, res) => {
     // returns all the place_comments as an array of json objects
     let data = await db.query("SELECT * FROM Place_comments");
-    res.json(data["rows"]);
+    return res.json(data["rows"]);
 });
 
 app.get("/data/user_reports", async (req, res) => {
     // returns all the user_reports as an array of json objects
     let data = await db.query("SELECT * FROM UserReports");
-    res.json(data["rows"]);
+    return res.json(data["rows"]);
 });
 
 app.post("/api/submitComment", async (req, res) => {
@@ -113,4 +113,3 @@ const PORT = 8080;
 app.listen(PORT, () => {
     console.log(`Server up and running on port ${PORT}`);
 });
-
