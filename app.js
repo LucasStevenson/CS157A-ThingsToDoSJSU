@@ -38,32 +38,22 @@ app.post('/signup', [body('username').isLength({ max: 30 }), body('email').isEma
     }
 });
 
-app.post('/login', (req, res) => {
-    const { email, password, remember } = req.body;
-    db.get(
-        'SELECT user_id, username, email FROM UserAccounts WHERE email = ?',
-        [email],
-        (err, row) => {
-            if (err) {
-                return res.send('error when logging in');
-            }
-
-            bcrypt.compare(password, row.password, (err, result) => {
-                if (err) {
-                    return res.render('error');
-                }
-
-                if (!result) {
-                    return res.render('invalid credentials');
-                }
-
-                req.session.user = row;
-                if (remember) {
-                    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Set session expiration to 30 days
-                }
-            });
+app.post('/login', async (req, res) => {
+    try {
+        const { email, password, remember } = req.body;
+        let row = await db.query("SELECT * FROM UserAccounts WHERE email = ?", [email]);
+        row = row["rows"][0];
+        let isValidPw = await bcrypt.compare(password, row.password);
+        if (!isValidPw) return res.status(400).send("User does not exist");
+        req.session.user = { "user_id": row.user_id, "username": row.username, "email": row.email };
+        if (remember) {
+            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Set session expiration to 30 days
         }
-    );
+        return res.status(200).send("Successfully logged in");
+    } catch (err) {
+        console.log(err);
+        return res.status(400).send("Something went wrong while logging in");
+    }
 });
 
 app.get('/logout', async (req, res) => {
@@ -76,37 +66,48 @@ app.get('/logout', async (req, res) => {
 
 app.get("/data/place_listings", async (req, res) => {
     // returns all the place_listings as an array of json objects
-    let places = await db.query("SELECT * FROM Place_listing");
-    res.json(places["rows"]);
+    let data = await db.query("SELECT * FROM Place_listing");
+    res.json(data["rows"]);
 });
 
 app.get("/data/place_business_hours", async (req, res) => {
     // returns all the place_businessHours as an array of json objects
-    let places = await db.query("SELECT * FROM Place_businessHours");
-    res.json(places["rows"]);
+    let data = await db.query("SELECT * FROM Place_businessHours");
+    res.json(data["rows"]);
 });
 
 app.get("/data/place_address", async (req, res) => {
     // returns all the place_addresses as an array of json objects
-    let places = await db.query("SELECT * FROM Place_address");
-    res.json(places["rows"]);
+    let data = await db.query("SELECT * FROM Place_address");
+    res.json(data["rows"]);
 });
 
 app.get("/data/place_comments", async (req, res) => {
     // returns all the place_comments as an array of json objects
-    let places = await db.query("SELECT * FROM Place_comments");
-    res.json(places["rows"]);
+    let data = await db.query("SELECT * FROM Place_comments");
+    res.json(data["rows"]);
 });
 
 app.get("/data/user_reports", async (req, res) => {
     // returns all the user_reports as an array of json objects
-    let places = await db.query("SELECT * FROM UserReports");
-    res.json(places["rows"]);
+    let data = await db.query("SELECT * FROM UserReports");
+    res.json(data["rows"]);
 });
 
 app.post("/api/submitComment", async (req, res) => {
-    // save the comment a user leaves for a specific place
-    let { user_id } = req.session.user;
+    try {
+        // save the comment a user leaves for a specific place
+        let { user_id } = req.session.user;
+        let { comment, rating, place_name } = req.body;
+
+        let obj = await db.query("SELECT place_id FROM Place_listing WHERE name = ?", [place_name]);
+        let { place_id } = obj["rows"][0];
+
+        await db.query("INSERT INTO Place_comments (place_id, user_id, rating, comment) VALUES (?, ?, ?, ?)", [place_id, user_id, rating, comment]);
+        return res.send("Successfully submitted comment");
+    } catch (err) {
+        return res.send("Error when submitting comment");
+    }
 })
 
 app.listen(PORT, () => {

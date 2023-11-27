@@ -46,8 +46,11 @@ function createTables(db) {
         CREATE TABLE IF NOT EXISTS Place_comments (
             comment_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
             place_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            rating INTEGER NOT NULL,
             comment VARCHAR(200) NOT NULL,
-            FOREIGN KEY (place_id) REFERENCES Place_listing(place_id)
+            FOREIGN KEY (place_id) REFERENCES Place_listing(place_id),
+            FOREIGN KEY (user_id) REFERENCES UserAccounts(user_id)
         );
 
         CREATE TABLE IF NOT EXISTS Place_businessHours (
