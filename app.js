@@ -12,7 +12,6 @@ app.use(express.json());
 
 const PORT = 8080;
 
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
@@ -22,86 +21,93 @@ app.use(
   })
 );
 
-app.set('view engine', 'ejs');
-
-app.get('/', (req, res) => {
-  res.redirect('/login');
-});
-
-app.get('/signup', (req, res) => {
-  res.render('signup');
-});
-
-app.post('/signup', [body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 6 })], async (req, res) => {
+app.post('/signup', [body('username').isLength({ max: 30 }), body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 6 })], async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.render('error', {errors: errors.array() });
+            return res.send('error when signing up');
         }
-        const { email, password } = req.body;
+        const { username, email, password } = req.body;
         let hashedPassword = await bcrypt.hash(password, 10);
-        await db.query('INSERT INTO UserAccounts (email, password) VALUES (?, ?)', [email, hashedPassword]);
-        res.redirect('/login');
+        await db.query('INSERT INTO UserAccounts (username, email, password) VALUES (?, ?, ?)', [username, email, hashedPassword]);
+        console.log(`User with email ${email} successfully signed up`);
+        return res.send("Successfully signed up");
     } catch (err) {
-        return res.render('error', { message: 'An error occurred' });
+        console.log(err.message);
+        return res.send('error when signing up');
     }
-});
-
-app.get('/login', (req, res) => {
-    res.render('login', { message: '' });
 });
 
 app.post('/login', (req, res) => {
-  const { email, password, remember } = req.body;
-  db.get(
-    'SELECT * FROM users WHERE email = ?',
-    [email],
-    (err, row) => {
-      if (err) {
-        return res.render('error', { message: 'An error occurred' });
-      }
+    const { email, password, remember } = req.body;
+    db.get(
+        'SELECT user_id, username, email FROM UserAccounts WHERE email = ?',
+        [email],
+        (err, row) => {
+            if (err) {
+                return res.send('error when logging in');
+            }
 
-      if (!row) {
-        return res.render('login', { message: 'Invalid credentials' });
-      }
+            bcrypt.compare(password, row.password, (err, result) => {
+                if (err) {
+                    return res.render('error');
+                }
 
-      bcrypt.compare(password, row.password, (err, result) => {
-        if (err) {
-          return res.render('error', { message: 'An error occurred' });
+                if (!result) {
+                    return res.render('invalid credentials');
+                }
+
+                req.session.user = row;
+                if (remember) {
+                    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Set session expiration to 30 days
+                }
+            });
         }
+    );
+});
 
-        if (!result) {
-          return res.render('login', { message: 'Invalid credentials' });
-        }
-
-        req.session.user = row;
-        if (remember) {
-          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Set session expiration to 30 days
-        }
-
-        res.redirect('/dashboard');
-      });
+app.get('/logout', async (req, res) => {
+    try {
+        req.session.destroy();
+    } catch (err) {
+        return res.send('error');
     }
-  );
 });
 
-app.get('/dashboard', (req, res) => {
-  if (!req.session.user) {
-    return res.redirect('/login');
-  }
-
-  res.render('dashboard', { user: req.session.user });
+app.get("/data/place_listings", async (req, res) => {
+    // returns all the place_listings as an array of json objects
+    let places = await db.query("SELECT * FROM Place_listing");
+    res.json(places["rows"]);
 });
 
-app.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.render('error', { message: 'An error occurred' });
-    }
-
-    res.redirect('/login');
-  });
+app.get("/data/place_business_hours", async (req, res) => {
+    // returns all the place_businessHours as an array of json objects
+    let places = await db.query("SELECT * FROM Place_businessHours");
+    res.json(places["rows"]);
 });
+
+app.get("/data/place_address", async (req, res) => {
+    // returns all the place_addresses as an array of json objects
+    let places = await db.query("SELECT * FROM Place_address");
+    res.json(places["rows"]);
+});
+
+app.get("/data/place_comments", async (req, res) => {
+    // returns all the place_comments as an array of json objects
+    let places = await db.query("SELECT * FROM Place_comments");
+    res.json(places["rows"]);
+});
+
+app.get("/data/user_reports", async (req, res) => {
+    // returns all the user_reports as an array of json objects
+    let places = await db.query("SELECT * FROM UserReports");
+    res.json(places["rows"]);
+});
+
+app.post("/api/submitComment", async (req, res) => {
+    // save the comment a user leaves for a specific place
+    let { user_id } = req.session.user;
+})
 
 app.listen(PORT, () => {
     console.log(`Server up and running on port ${PORT}`);
