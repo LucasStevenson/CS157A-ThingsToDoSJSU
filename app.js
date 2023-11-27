@@ -10,15 +10,16 @@ const db = require("./database").createDbConnection(process.env.DB_ENV === "PROD
 // parse request bodies
 app.use(express.json());
 
-const PORT = 8080;
-
 app.use(express.urlencoded({ extended: false }));
+
+const TWO_HOURS_IN_MS = 2*60*60*1000;
 app.use(
-  session({
-    secret: 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-  })
+    session({
+        secret: 'your-secret-key',
+        cookie: { maxAge: TWO_HOURS_IN_MS },
+        resave: false,
+        saveUninitialized: false,
+    })
 );
 
 app.post('/signup', [body('username').isLength({ max: 30 }), body('email').isEmail().normalizeEmail(), body('password').isLength({ min: 6 })], async (req, res) => {
@@ -40,16 +41,14 @@ app.post('/signup', [body('username').isLength({ max: 30 }), body('email').isEma
 
 app.post('/login', async (req, res) => {
     try {
-        const { email, password, remember } = req.body;
+        const { email, password } = req.body;
         let row = await db.query("SELECT * FROM UserAccounts WHERE email = ?", [email]);
         row = row["rows"][0];
+        if (row === undefined) return res.status(400).send("Invalid credentials");
         let isValidPw = await bcrypt.compare(password, row.password);
         if (!isValidPw) return res.status(400).send("User does not exist");
         req.session.user = { "user_id": row.user_id, "username": row.username, "email": row.email };
-        if (remember) {
-            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // Set session expiration to 30 days
-        }
-        return res.status(200).send("Successfully logged in");
+        return res.status(200).json(req.session.user);
     } catch (err) {
         console.log(err);
         return res.status(400).send("Something went wrong while logging in");
@@ -110,6 +109,7 @@ app.post("/api/submitComment", async (req, res) => {
     }
 })
 
+const PORT = 8080;
 app.listen(PORT, () => {
     console.log(`Server up and running on port ${PORT}`);
 });
