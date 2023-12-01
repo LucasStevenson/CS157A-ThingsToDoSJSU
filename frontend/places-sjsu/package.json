@@ -4,9 +4,10 @@
   "description": "",
   "license": "MIT",
   "scripts": {
-    "start": "vite",
+    "start": "vite --host 0.0.0.0",
     "preview": "vite preview",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
